@@ -4,7 +4,7 @@ var http = require('http');
 var app = http.createServer();
 app.listen(3000);
 
-require('./index.js')(app);
+require('./lib/index.js')(app);
 
 /////////////////////////////////////////////
 //

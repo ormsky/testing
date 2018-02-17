@@ -34,7 +34,7 @@ exports['test request_handle'] = function (assert,done) {
 //
 if (module == require.main) {
   var app = http.createServer().listen(testPort);
-  require('../index.js')(app);
+  require('../lib/index.js')(app);
 
   console.log("If test hangs, then callback functions probably not getting called (treat as failure).");
   require('test').run(exports);
