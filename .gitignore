@@ -1,3 +1,9 @@
+# configuration file
+config.js
+
+# temp folder
+temp
+
 # Logs
 logs
 *.log

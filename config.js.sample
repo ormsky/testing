@@ -1,0 +1,16 @@
+var config = {};
+
+//
+//  Database configuration
+//
+//  You will need to have created a user/password in CouchDB
+//
+config.db_url = 'https://user:userspassword@localdatabaseserver:5984';
+config.db_database = 'mydatabase';
+
+//
+//
+//
+
+
+module.exports = exports = config;
