@@ -8,6 +8,9 @@ var config = {};
 config.db_url = 'https://user:userspassword@localdatabaseserver:5984';
 config.db_database = 'mydatabase';
 
+// For test purposes, this database will be created and deleted
+config.test_db_name = 'temp_fr_test';
+
 //
 //
 //

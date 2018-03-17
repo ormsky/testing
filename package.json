@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "directories.test": "./test",
   "scripts": {
-    "test": "tap test/*.js"
+    "test": "nyc tap test/*.js"
   },
   "author": "Michael Aspden",
   "license": "GPL-3.0",

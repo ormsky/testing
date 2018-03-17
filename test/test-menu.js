@@ -3,22 +3,14 @@
 var debug = require('debug')('bfr-test');
 var m = require('../lib/menu.js');
 
-exports['test menu'] = function (assert,done) {
-  debug('start menu');
-  var items = m.top_menu();
-  assert.equal( items.length, 2 );
-  console.log(items);
-
-  items = m.get_menu("audio_options");
-  console.log(items);
-
-}
+var tap = require('tap');
 
 
-//
-// if this module was run directly from the command line as in node xxx.js
-// then do the test run:
-//
-if (module == require.main) {
-  require('test').run(exports);
-}
+var items = m.top_menu();
+tap.equal( items.length, 2 );
+console.log(items);
+
+items = m.get_menu("audio_options");
+tap.equal( items.length, 2 );
+console.log(items);
+
