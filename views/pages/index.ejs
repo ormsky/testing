@@ -1,0 +1,114 @@
+<!-- views/pages/index.ejs -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include ../partials/head %>
+</head>
+<body class="container">
+
+<header>
+  <% include ../partials/header %>
+</header>
+
+<main>
+<div id="connections">Connections - Loading...</div>
+<div id="menu">Menu - Loading...</div>
+
+    <div class="jumbotron">
+        <h1>This is great</h1>
+        <p>Welcome to templating using EJS</p>
+    </div>
+
+<div id="slickmenu" data-slick='{"slidesToShow": 4, "slidesToScroll": 4}'>
+  <div><h3>1</h3></div>
+  <div><h3>2</h3></div>
+  <div><h3>3</h3></div>
+  <div><h3>4</h3></div>
+  <div><h3>5</h3></div>
+  <div><h3>6</h3></div>
+</div>
+
+</main>
+
+<footer>
+    <% include ../partials/footer %>
+</footer>
+
+
+<script>
+
+var handle = null;
+
+
+socket.on('handle', function(data) {
+  handle = data.handle;
+  socket.emit('get_connections');
+  socket.emit('get_menu');
+});
+
+socket.on('connections', function(data) {
+  for (var i in data) {
+    var d = data[i];
+    //alert( d.name + ' ' + d.handle );
+  }
+  $("#connections").html( JSON.stringify(data) );
+});
+
+socket.on('menu', function(data) {
+  //$("#menu").html( JSON.stringify(data) );
+});
+
+
+function showMenu(menu,offset) {
+  $.getJSON('http://dev1.ormsky.org:8080/menu.json', function (data) {
+    $("#menu").html( JSON.stringify(data) );
+  })
+};
+
+
+$(function() {
+
+
+  showMenu( null, 0 );
+ 
+
+
+  $("#slickmenu").slick(
+{
+  centerMode: true,
+  centerPadding: '60px',
+  slidesToShow: 3,
+  responsive: [
+    {
+      breakpoint: 768,
+      settings: {
+        arrows: false,
+        centerMode: true,
+        centerPadding: '40px',
+        slidesToShow: 3
+      }
+    },
+    {
+      breakpoint: 480,
+      settings: {
+        arrows: false,
+        centerMode: true,
+        centerPadding: '40px',
+        slidesToShow: 1
+      }
+    }
+  ]
+});
+
+
+  socket.emit('request_handle', { name: 'chrome' } );
+});
+
+</script>
+
+
+</body>
+</html>
+
+

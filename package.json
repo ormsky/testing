@@ -10,13 +10,19 @@
   "author": "Michael Aspden",
   "license": "GPL-3.0",
   "dependencies": {
+    "bootstrap": "^4.1.1",
     "debug": "^3.1.0",
-    "music-metadata": "^0.9.5",
-    "nano": "^6.4.2",
-    "socket.io": "^2.0.4"
+    "ejs": "^2.6.1",
+    "express": "^4.16.3",
+    "jquery": "^3.3.1",
+    "music-metadata": "^0.9.15",
+    "nano": "^6.4.4",
+    "popper.js": "^1.14.3",
+    "slick-carousel": "^1.8.1",
+    "socket.io": "^2.1.1"
   },
   "devDependencies": {
-    "tap": "^11.1.1",
+    "tap": "^11.1.5",
     "test": "^0.6.0"
   }
 }

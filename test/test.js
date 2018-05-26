@@ -18,7 +18,7 @@ tap.test('test connections', function (childTest) {
   //
   var server = http.createServer();
   var app = server.listen(testPort);
-  require('../lib/index.js')(app);
+  require('../lib/socket-server.js')(app);
 
   socket.on('handle', function (data) {
     debug('received handle');

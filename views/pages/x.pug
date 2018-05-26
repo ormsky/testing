@@ -1,0 +1,63 @@
+extends layout
+
+
+block content
+  h1= title
+  p Welcome to #{title} 
+  
+  p(id='iam')
+
+  p(id='friends')
+
+  a(
+    onclick='WhoIsThere()'
+   ) BOO
+
+
+  div
+   form#formTarget
+     input(type="radio") 
+     | Me
+
+
+  div
+    p Target
+    input(id='target1' type='text')
+    a(onclick='PlayAudio("x.mp3",document.getElementById("target1").value)') PLAY
+    
+  div
+    p Target
+    input(id='target2' type='text')
+    a(onclick='PlayAudio("s1.mp4",document.getElementById("target2").value)') PLAY
+
+  div
+    p Target
+    input(id='target3' type='text')
+    a(onclick='PlayAudio("xxx",document.getElementById("target3").value)') PLAY
+    
+    
+
+  video(width=400 id='videoplayer', controls)
+    Browser does not support HTML5 video
+    
+  audio(width=400, id='audioplayer', controls)
+    Browser does not support HTML5 audio
+
+
+  div
+    ul#x(class="menu")
+      li 
+        a(onclick="document.getElementById('y').hidden=false;") Audio
+        ul#y(class="menu" hidden )
+          li
+            a Music Library
+          li
+            a Radio
+      li
+        a Video
+        ul#z(class="menu" hidden)
+          li
+            a Movies
+          li
+            a Home
+

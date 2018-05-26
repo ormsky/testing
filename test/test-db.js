@@ -6,7 +6,7 @@ var config = require('../config');
 
 const temp_db = 'temp_fr_test';
 
-var db = require('../lib/repos_couchdb');
+var db = require('../lib/repos-couchdb');
 
 var assert = require('assert');
 
@@ -25,8 +25,8 @@ t.test('test db connect', async function(t) {
     t.pass("db re-configure");
 
 
-    var t5 = await db.add( './test/samples/sample-1.mp3' );
-    t.ok(t5.id, 'Add sample file');
+//    var t5 = await db.add( './test/samples/sample-1.mp3' );
+//    t.ok(t5.id, 'Add sample file');
 
     t.rejects( db.add( 'dummy' ), 'File not found' );
 
@@ -54,6 +54,13 @@ t.test('test db connect', async function(t) {
     console.log(l2);
 
 
+    var m = await db.get_menu(  );
+    console.log( m );
+    console.log( "^^^^^^^^^" );
+
+    m = await db.get_menu( "menu_albums" );
+    console.log( m );
+    console.log( "^^^^^^^^^" );
 
 //    var xx = await db.find_track( { album: 'Excavated Shellac', artist: 'James Morrison' } );
 //    console.log(xx);
@@ -65,39 +72,8 @@ t.test('test db connect', async function(t) {
     t.fail(ex);
     t.end();
   }
-/*
-  await db.configure();
-  t.pass("db configure");
-
-  await db.configure();
-  t.pass("db re-configure");
-
-  t.end();
-*/
 
 });
 
 
 
-
-//var mm = require('music-metadata');
-//const util = require('util')
-
-//var f = process.argv[2];
-//var f = '/home/sammy/Music/Wish You Were Here/Disc 1 - 1_-_Shine_On_You_Crazy_Diamond,_Parts_1-5.flac';
-//var f = '/home/sammy/Music/test.flac';
-
-/*
-mm.parseFile(f, {native: true})
-  .then(function (metadata) {
-    //console.log(util.inspect(metadata, { showHidden: true, depth: null }));
-    db.add_file( metadata, f, function(err,body) {
-      console.log(err);
-      console.log(body);
-    });
-  })
-  .catch(function (err) {
-    console.error(err.message);
-  });
-
-*/
