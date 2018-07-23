@@ -41,16 +41,24 @@ t.test('test db connect', async function(t) {
     t.ok(u4.id, 'Add sample file u4');
 */
 
+    try {
     var l1 = await db.list_audio_artist_album_track();
+    console.log('ARTISTS--------------------');
     console.log(l1);
+    } catch(e) {
+      console.log(e);
+    }
 
     var l2 = await db.list_audio_artist_album_track( 'Nobody\'s Bizness' );
+    console.log('ALBUMS--------------------');
     console.log(l2);
 
     l2 = await db.list_audio_artist_album_track( 'Nobody\'s Bizness', 'Ao Vivo Na Capela da Misericórdia' );
+    console.log('TRACKS--------------------');
     console.log(l2);
 
     l2 = await db.list_audio_artist_album_track( 'Nobody\'s Bizness', 'Ao Vivo Na Capela da Misericórdia', 'Come on in My Kitchen' );
+    console.log('TRACK--------------------');
     console.log(l2);
 
 

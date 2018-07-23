@@ -25,9 +25,13 @@ module.exports = function(app, repos) {
   app.get('/menu.json', function(req, res) {
     var q = req.query;
     var id = q.id;
+console.log("keys");
+console.log(q.keys);
+    var keys;
+    if (q.keys) { keys = JSON.parse( q.keys ); }
     var offset = q.offset;
     var max = q.max;
-    repos.get_menu( id, offset, max )
+    repos.get_menu( id, keys, offset, max )
       .then( function (fulfilled) {
          res.send( fulfilled );
       })
