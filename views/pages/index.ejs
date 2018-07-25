@@ -110,19 +110,26 @@ function displayMenu(target_tab_index,menudata,offset) {
 
 function handleMenuClick(tabindex,menuindex) {
   var d = menuData[tabindex][menuindex];
-//  var id = safeText(d.id);
-  selectMenuItem(tabindex,menuindex);
-//  activateSelectedMenuItem();
-  addNewMenu( d, tabindex+1);
+
+  var action = d.action;
+
+  if (action == "stream") {
+    alert("PLAY!");
+  } else {
+    selectMenuItem(tabindex,menuindex);
+    addNewMenu( d, tabindex+1);
+  }
 }
 
 
 function activateSelectedMenuItem() {
   var activeMenu = getActiveTabActiveMenuItem();
-  var menuItem = activeMenu.first();
-  var id = menuItem.attr("id");
 
-  addNewMenu(id);
+  var menuItem = activeMenu.first();
+  var tabi = parseInt(menuItem.attr("data-tabindex"));
+  var menui = parseInt(menuItem.attr("data-menuindex"));
+
+  handleMenuClick(tabi,menui);
 }
 
 function selectMenuItem(tabindex,menuindex) {
@@ -205,13 +212,28 @@ function handleKeyPress( keycode ) {
     newItem = activeMenu.next();
   } else if (keycode==38) {
     newItem = activeMenu.prev();
+  } else if (keycode == 27) {
+    var th = $("#tabheaders");
+    var tp = $("#tabpanes");
+    var x1 = $(th).find("li.active");
+    var x2 = x1.prev();
+    $(x1).removeClass("active");
+    $(x2).addClass("active");
+
+    x1 = $(tp).find(".tab-pane.active");
+    x2 = x1.prev();;
+    $(x1).removeClass("active");
+    $(x2).addClass("active");
+
   } else if (keycode == 13) {
     activateSelectedMenuItem();
     //var id = activeMenu.first().attr("id");
     //activateMenuItem(id);
   }
   if (newItem && newItem.length>0) {
-    selectMenuItem( newItem[0].id );
+    $(activeMenu).removeClass("active");
+    $(newItem).addClass("active");
+    // selectMenuItem2( newItem[0].id );
   }
 }
 
