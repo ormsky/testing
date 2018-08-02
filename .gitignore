@@ -4,6 +4,9 @@ config.js
 # temp folder
 temp
 
+# editor files
+\#*\#
+
 # Logs
 logs
 *.log

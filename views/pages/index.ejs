@@ -12,6 +12,9 @@
 </header>
 
 <main>
+<div id='player'>
+PLAYER
+</div>
 <div class="container">
 
 
@@ -27,6 +30,11 @@
 
 
 </div>
+
+<div id="audio-player-container">
+<audio id="audio-player" width="400" controls/>
+</div>
+
 </main>
 
 
@@ -54,6 +62,28 @@ socket.on('connections', function(data) {
 });
 
 
+socket.on('playMedia', function(data) {
+  if (data.player == handle) {
+    $('#player').html("PLAYER play request received for ME! "+data.action+' - '+data.dataId+' - '+data.text);
+    //var d = $('#audio-player-container');
+    //$(d).html("");
+    //$(d).html('<audio id="audio-player" width="400" controls/>');
+    var x = document.getElementById('audio-player');
+    x.src="";
+
+    //x.load();
+//    x.currentTime = 0;
+    //$('#audio-player').attr("src",'media?id='+data.dataId)
+    x.src = 'media?id='+data.dataId;
+    x.play();
+  } else {
+    $('#player').html("PLAYER play request received for someone else.");
+  }
+  //alert('play media!');
+  //alert(data);
+});
+
+
 
 function safeText(text) {
   if (!text) { return null; }
@@ -65,25 +95,50 @@ function safeText(text) {
 var menuData = [];
 
 
-function displayMenu(target_tab_index,menudata,offset) {
+function processMenuData(target_tab_index,menudata,offset) {
+  if (menudata && menudata.action == "stream") {
+    menudata.player = handle;
+    socket.emit('requestPlayMedia', menudata);
+//    alert("stream "+menudata.dataId);
+  } else {
+    loadMenuData(target_tab_index, menudata, offset);
+  }
+}
+
+function loadMenuData(target_tab_index,menudata,offset) {
   var uri = "http://dev1.ormsky.org:8080/menu.json";
+  var title = ( menudata ? menudata.text : 'Home' );
   if (menudata)
   {
     var d = menudata; //menuData[tabindex][menuindex];
-    var id = safeText(d.id);
+    var id = safeText(d.subMenu);
     var keys = d.keys;
     if (id) { uri += "?id="+id; }
     if (keys) { uri += "&keys="+JSON.stringify(keys); }
   }
   $.getJSON( uri, function (data) {
-    // store the menu items
-    menuData.length = target_tab_index+1;
-    menuData[target_tab_index] = data.items;
+    if (menudata && menudata.action == "stream") {
+      alert('stream!');
+    } else {
+      // store the menu items
+      menuData.length = target_tab_index+1;
+      menuData[target_tab_index] = data;
+      // construct html
+      addNewMenuTab(title,target_tab_index);
+      var x = getTab(target_tab_index);
+      $(x).html( getMenuAsHtml(data,target_tab_index) );
+    }
+  });
+};
+
+
+function getMenuAsHtml(data,tabIndex) {
+    //data = menuData[tabIndex];
     // construct html
     var mdivs = '<ul class="click-select nav nav-pills nav-stacked">';
     for (var i in data.items) {
       var d = data.items[i];
-      var mid = safeText(d.id);
+      //var mid = safeText(d.subMenu);
       //menuData[target_tab_index][i] = d;
       var mtext = safeText(d.text);
       var mkeys = ((d.keys) ? $.param({keys : d.keys}) : '');
@@ -91,34 +146,37 @@ function displayMenu(target_tab_index,menudata,offset) {
       //  + ' onclick="handleMenuClick(\''+mid+'\', \''+mkeys+'\')"'
       //  + ' class="menuItem'+((i==0)?' active':'')+'"'
       //  + '><a>'+mtext+'</a></li>';
-      mdivs += '<li id="'+mid+'"'
-        + ' data-tabindex="'+target_tab_index+'"'
+      mdivs += '<li'
+        + ' data-tabindex="'+tabIndex+'"'
         + ' data-menuindex="'+i+'"'
         + ' data-action="'+d.action+'"'
-        + ' onclick="handleMenuClick('+target_tab_index+','+i+')"'
+        + ' onclick="handleMenuClick('+tabIndex+','+i+')"'
         + ' class="menuItem'+((i==0)?' active':'')+'"'
         + '><a>'+mtext+'</a></li>';
     }
     mdivs += "</ul>";
 
+    return mdivs;
 //    var x = getActiveTab();
-    var x = getTab(target_tab_index);
-    $(x).html( mdivs );
-  });
-};
+//    var x = getTab(target_tab_index);
+//    $(x).html( mdivs );
+}
 
 
 function handleMenuClick(tabindex,menuindex) {
-  var d = menuData[tabindex][menuindex];
+  selectMenuItem(tabindex,menuindex);
+  var d = menuData[tabindex].items[menuindex];
 
-  var action = d.action;
+  processMenuData(tabindex+1,d,0);
 
-  if (action == "stream") {
-    alert("PLAY!");
-  } else {
-    selectMenuItem(tabindex,menuindex);
-    addNewMenu( d, tabindex+1);
-  }
+//  var action = d.action;
+
+//  if (action == "stream") {
+//    alert("PLAY!");
+//  } else {
+//    selectMenuItem(tabindex,menuindex);
+//    addNewMenu( d, tabindex+1);
+//  }
 }
 
 
@@ -145,9 +203,9 @@ function selectMenuItem2(itemId) {
 }
 
 
-function addNewMenu(menu_data, target_tab_index) {
+function addNewMenuTab(title, target_tab_index) {
   //var d = menuData[i];
-  var title = ((menu_data) ? safeText(menu_data.text) : '');
+  var title = safeText(title);
 
   var th = $("#tabheaders");
   var tp = $("#tabpanes");
@@ -166,10 +224,10 @@ function addNewMenu(menu_data, target_tab_index) {
 
   th.append("<li class='active'><a data-toggle='tab' href='#pane_"+target_tab_index+"'>"+title+"</a></li>");
   tp.append(
-'    <div id="pane_'+target_tab_index+'" class="tab-pane fade in active"> \
-      <ul class="nav nav-pills nav-stacked"></ul> \
-    </div> \
-');
+  '<div id="pane_'+target_tab_index+'" class="tab-pane fade in active"> \
+    <ul class="nav nav-pills nav-stacked"></ul> \
+   </div> \
+  ');
 
   var x1 = $(th).find("li");
   var x2 = $(x1).slice(0,target_tab_index);
@@ -183,7 +241,10 @@ function addNewMenu(menu_data, target_tab_index) {
 //  oldActiveHeader.removeClass("active");
 //  oldActivePane.removeClass("active");
 
-  displayMenu(target_tab_index, menu_data);
+//  displayMenu(target_tab_index, menu_data);
+//  var x = getTab(target_tab_index);
+  //$(x).html( getMenuAsHtml(target_tab_index) );
+//  $(x).html( getMenuAsHtml(menu_data) );
 }
 
 function getTab(tabindex) {
@@ -203,6 +264,27 @@ function getActiveTabActiveMenuItem() {
 }
 
 
+function menuBack() {
+  var activeMenu = getActiveTabActiveMenuItem();
+
+  var menuItem = activeMenu.first();
+  var tabi = parseInt(menuItem.attr("data-tabindex"));
+  if (tabi==0) { return; }
+
+  var th = $("#tabheaders");
+  var tp = $("#tabpanes");
+  var x1 = $(th).find("li.active");
+  var x2 = x1.prev();
+  $(x1).removeClass("active");
+  $(x2).addClass("active");
+
+  x1 = $(tp).find(".tab-pane.active");
+  x2 = x1.prev();;
+  $(x1).removeClass("active");
+  $(x2).addClass("active");
+}
+
+
 function handleKeyPress( keycode ) {
   console.log("keycode");
   console.log(keycode);
@@ -213,18 +295,7 @@ function handleKeyPress( keycode ) {
   } else if (keycode==38) {
     newItem = activeMenu.prev();
   } else if (keycode == 27) {
-    var th = $("#tabheaders");
-    var tp = $("#tabpanes");
-    var x1 = $(th).find("li.active");
-    var x2 = x1.prev();
-    $(x1).removeClass("active");
-    $(x2).addClass("active");
-
-    x1 = $(tp).find(".tab-pane.active");
-    x2 = x1.prev();;
-    $(x1).removeClass("active");
-    $(x2).addClass("active");
-
+    menuBack();
   } else if (keycode == 13) {
     activateSelectedMenuItem();
     //var id = activeMenu.first().attr("id");
@@ -239,14 +310,26 @@ function handleKeyPress( keycode ) {
 
 
 
-
+socket.on('play audio', function (data) {
+  //if (data.id != connectionnumber) {return;}
+  var ct = data["content-type"];
+  if (ct.startsWith('audio')) {
+    var ap = document.getElementById('audioplayer');
+    ap.setAttribute("src",data.source);
+    ap.play();
+  } else {
+    var ap = document.getElementById('videoplayer');
+    ap.setAttribute("src",data.source);
+    ap.play();
+  }
+});
 
 
 $(function() {
 
-  displayMenu( 0, null, 0 );
+  processMenuData( 0, null, 0 );
 
-  $("ul").on( "click", "li.click-select", function(x) { selectMenuItem(this.id); } );
+  $("ul").on( "click", "li.click-select", function(x) { selectMenuItem(this.data-tabindex,this.data-menuindex); } );
 
   $(document).on("keydown", function(event) { handleKeyPress( event.keyCode? event.keyCode : event.which); });
 

@@ -20,6 +20,33 @@ module.exports = function(app, repos) {
 
 
   //
+  // Media request routing
+  //
+  app.get('/media', function(req, res) {
+    var q = req.query;
+    var id = q.id;
+    repos.get_media( id )
+      .then( function (data) {
+         res.set('Content-Type', data.contentType);
+
+         //res.send( data.data );
+        repos.get_mediaStream( id )
+        .then( function(stream) {
+          stream.pipe(res);
+        })
+        .catch( function(error) {
+          console.log(error);
+          res.sendStatus(500);
+        });
+      })
+      .catch( function(error) {
+        console.log(error);
+        res.sendStatus(500);
+      });
+  });
+
+
+  //
   // Menu request routing
   //
   app.get('/menu.json', function(req, res) {
