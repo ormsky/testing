@@ -18,12 +18,15 @@ var http = require('http');
 var soc_app = http.createServer();
 
 
+var arg = process.argv[2];
+console.log(arg);
 
 
 
 var config = require('./config');
 
-const temp_db = 'temp_fr_test';
+//var db = 'temp_fr_test';
+var db = config.db_database;
 
 //repos.connect(config.db_url, temp_db).then( () =>
 //  {
@@ -42,8 +45,11 @@ var soc = require('./lib/socket-server.js')(soc_app);
 var web_server = require('./lib/web-server');
 
 var repos = require('./lib/repos-couchdb.js');
-repos.connect(config.db_url, temp_db).then( () =>
+repos.connect(config.db_url, db).then( () =>
 {
+  if (arg == "init") {
+    repos.configure();
+  }
   web_server.listen(8080,repos);
 });
 

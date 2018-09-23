@@ -3,20 +3,84 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <% include ../partials/head %>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <% include ../partials/head %>
+
+<style>
+body {margin:0;}
+
+.navbar {
+  overflow: hidden;
+  background-color: #333;
+  position: fixed;
+  top: 0;
+  width: 100%;
+}
+
+.navbar a {
+  float: left;
+  display: block;
+  color: #f2f2f2;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+  //font-size: 17px;
+}
+
+.navbar a:hover {
+  background: #ddd;
+  color: black;
+}
+
+.main {
+  padding: 16px;
+  margin-top: 90px;
+//  height: 1500px; /* Used in this example to enable scrolling */
+}
+</style>
+
 </head>
 <body class="container">
 
 <header>
-  <% include ../partials/header %>
+  <!--% include ../partials/header %-->
 </header>
 
 <main>
-<div id='player'>
-PLAYER
-</div>
-<div class="container">
 
+<div class="navbar">
+<div class="row">
+
+  <div class="col-sm-6 dropdown">
+    <button id="deviceListHeader" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Media Device
+    <span class="caret"></span></button>
+    <ul id="deviceList" class="dropdown-menu">
+      <li><a href="#">Please wait.....</a></li>
+    </ul>
+  </div>
+
+  <div class="col-sm-6">
+    <button onclock="clickPlay();" type="button" class="btn btn-default">
+      <span class="glyphicon glyphicon-play"></span>
+    </button>
+    <button onclick="clickPause();" type="button" class="btn btn-default">
+      <span class="glyphicon glyphicon-pause"></span>
+      <span class="glyphicon glyphicon-play"></span>
+    </button>
+    <button onclick="clickStop();" type="button" class="btn btn-default">
+      <span class="glyphicon glyphicon-stop"></span>
+    </button>
+  </div>
+
+</div>
+</div>
+
+
+
+
+<div class="main">
+
+<div class="container">
 
   <ul id="tabheaders" class="nav nav-tabs">
     <li class="active"><a data-toggle="tab" href="#tab1">Home</a></li>
@@ -32,8 +96,12 @@ PLAYER
 </div>
 
 <div id="audio-player-container">
-<audio id="audio-player" width="400" controls/>
+<audio id="audio-player" width="400"/>
 </div>
+
+</div> <!-- main -->
+
+
 
 </main>
 
@@ -45,25 +113,126 @@ PLAYER
 
 <script>
 
-var handle = null;
+var audioPlayer = document.getElementById('audio-player');
+
+function localPlay() {
+  audioPlayer.play();
+}
+
+function localPause() {
+  if ( audioPlayer.paused ) {
+    audioPlayer.play();
+  } else {
+    audioPlayer.pause();
+  }
+}
 
 
+
+function getParameterByName(name, url) {
+  if (!url) url = window.location.href;
+  name = name.replace(/[\[\]]/g, '\\$&');
+  var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+      results = regex.exec(url);
+  if (!results) return null;
+  if (!results[2]) return '';
+  return decodeURIComponent(results[2].replace(/\+/g, ' '));
+}
+
+
+var connectionnumber;
+var socketUrl = window.location.protocol+'//'+window.location.hostname+':3001';
+var alias = getParameterByName( "alias" );
+// alias = ( alias ? alias : "Unknown" );
+var socket = io.connect(socketUrl, { query: { media_player_alias : alias } } );
+
+
+//alert(window.location);
+
+var id = null;
+var devices = null;
+var activeDevice = null;
+
+function setDevice(index) {
+  var d = devices[index];
+  activeDevice = d;
+  updateStatus();
+}
+
+socket.on('connect', function() {
+  id = socket.id;
+  updateStatus();
+});
+
+
+
+function clickPause() {
+  if (activeDevice.id == id) {
+    localPause();
+  } else {
+    socket.emit( "pauseMedia", { player: activeDevice.id } );
+  }
+}
+
+function clickPlay() {
+  if (activeDevice.id == id) {
+  } else {
+  }
+}
+
+
+
+
+
+function deviceName(d) {
+  if (!d) { return "*Undefined*"; }
+  return d.name;
+//  if (d.id == id) {
+//    return "Local (this device)";
+//  } else {
+//    return d.name; //+" ("+d.id+")";
+//  }
+}
+
+function updateStatus() {
+  $('#status').html("Status: Connected as ["+id+"]");
+  var d = activeDevice;
+  $("#deviceListHeader").html("Media Device: "+deviceName(d)+" <span class='caret'></span>");
+}
+
+/*
 socket.on('handle', function(data) {
+  activeDevice = data;
   handle = data.handle;
+  updateStatus();
   socket.emit('get_connections');
 });
+*/
 
 socket.on('connections', function(data) {
+  devices = data;
+  devices[socket.id] = { id: socket.id, name: 'Local (this device)' };
+  var ul = $("#deviceList");
+  $(ul).empty();
+  $(ul).append("<li onclick='setDevice(\""+socket.id+"\")'><a href='#'>Local (this device)</a></li>");
   for (var i in data) {
     var d = data[i];
-    //alert( d.name + ' ' + d.handle );
+    if ( d.id != socket.id ) {
+      $(ul).append("<li onclick='setDevice(\""+d.id+"\")'><a href='#'>"+deviceName(d)+"</a></li>");
+    }
   }
 //  $("#connections").html( JSON.stringify(data) );
+  if (activeDevice===null) { setDevice(socket.id); }
 });
 
+socket.on('pauseMedia', function(data) {
+  if (data.player == id) {
+    localPause();
+  }
+});
 
 socket.on('playMedia', function(data) {
-  if (data.player == handle) {
+  if (data.player == id) {
     $('#player').html("PLAYER play request received for ME! "+data.action+' - '+data.dataId+' - '+data.text);
     //var d = $('#audio-player-container');
     //$(d).html("");
@@ -97,7 +266,7 @@ var menuData = [];
 
 function processMenuData(target_tab_index,menudata,offset) {
   if (menudata && menudata.action == "stream") {
-    menudata.player = handle;
+    menudata.player = activeDevice.id;
     socket.emit('requestPlayMedia', menudata);
 //    alert("stream "+menudata.dataId);
   } else {
@@ -142,10 +311,6 @@ function getMenuAsHtml(data,tabIndex) {
       //menuData[target_tab_index][i] = d;
       var mtext = safeText(d.text);
       var mkeys = ((d.keys) ? $.param({keys : d.keys}) : '');
-      //mdivs += '<li id="'+mid+'"'
-      //  + ' onclick="handleMenuClick(\''+mid+'\', \''+mkeys+'\')"'
-      //  + ' class="menuItem'+((i==0)?' active':'')+'"'
-      //  + '><a>'+mtext+'</a></li>';
       mdivs += '<li'
         + ' data-tabindex="'+tabIndex+'"'
         + ' data-menuindex="'+i+'"'
@@ -333,7 +498,7 @@ $(function() {
 
   $(document).on("keydown", function(event) { handleKeyPress( event.keyCode? event.keyCode : event.which); });
 
-  socket.emit('request_handle', { name: 'chrome' } );
+  //socket.emit('request_handle', { name: 'chrome', publicPlayer: true } );
 });
 
 </script>

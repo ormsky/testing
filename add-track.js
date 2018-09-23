@@ -5,7 +5,7 @@
 
 var config = require('./config');
 
-var db = require('./lib/repos_couchdb');
+var db = require('./lib/repos-couchdb');
 
 db.connect( config.db_url, config.db_database);
 
@@ -20,7 +20,8 @@ var files = process.argv.slice(2);
 var x;
 for (x in files) {
   var z = files[x];
-  add(z);
+  console.log(z);
+  db.add(z);
 }
 
 
@@ -29,9 +30,7 @@ function add( f ) {
     .then(function (metadata) {
       //console.log(util.inspect(metadata, { showHidden: true, depth: null }));
       db.add_file( metadata, f, function(err,body) {
-        console.log(f);
-        console.log(err);
-        console.log(body);
+        if (err) { console.log(err); }
       });
     })
     .catch(function (err) {

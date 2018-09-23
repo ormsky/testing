@@ -7,7 +7,7 @@ var socketUrl = window.location.protocol+'//'+window.location.hostname+':3001';
 var socket = io.connect(socketUrl);
 
 
-
+/*
 socket.on('youare', function (data) {
   connectionnumber = data.id;
   document.getElementById('iam').innerHTML = 'This connection '+connectionnumber;
@@ -64,4 +64,6 @@ function PlayAudio(source, target) {
         socket.emit('request play audio', { id: t,
                     source: appUrl+'/media?source='+encodeURIComponent(source)});
 }
+
+*/
 

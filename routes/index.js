@@ -11,7 +11,10 @@ module.exports = function(app, repos) {
   // Web page routing
   //
   app.get('/', function(req, res) {
-    res.render( pages+'index' );
+    var q = req.query;
+    var id = q.id;
+    var publicPlayer = ( q.publicPlayer === undefined ) ? false : q.publicPlayer;
+    res.render( pages+'index', { publicPlayer: publicPlayer } );
   });
 
   app.get('/about', function(req, res) {
@@ -25,6 +28,7 @@ module.exports = function(app, repos) {
   app.get('/media', function(req, res) {
     var q = req.query;
     var id = q.id;
+    var publicPlayer = ( q.publicPlayer === undefined ) ? false : q.publicPlayer;
     repos.get_media( id )
       .then( function (data) {
          res.set('Content-Type', data.contentType);
