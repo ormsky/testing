@@ -4,62 +4,35 @@
 <html lang="en">
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <% include ../partials/head %>
+  <!--   % include ../partials/head %  -->
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+
+  <script src="/public/javascript/socket.io/socket.io.js"></script>
+
 
 <style>
-body {margin:0;}
+.affix {
+      top: 0;
+      width: 100%;
+      z-index: 9999 !important;
+  }
 
-.navbar {
-  overflow: hidden;
-  background-color: #333;
-  position: fixed;
-  top: 0;
-  width: 100%;
-}
-
-.navbar a {
-  float: left;
-  display: block;
-  color: #f2f2f2;
-  text-align: center;
-  padding: 14px 16px;
-  text-decoration: none;
-  //font-size: 17px;
-}
-
-.navbar a:hover {
-  background: #ddd;
-  color: black;
-}
-
-.main {
-  padding: 16px;
-  margin-top: 90px;
-//  height: 1500px; /* Used in this example to enable scrolling */
-}
+  .affix + .container-fluid {
+      padding-top: 70px;
+  }}
 </style>
 
 </head>
-<body class="container">
+<body>
 
-<header>
-  <!--% include ../partials/header %-->
-</header>
+<div class="container" data-spy="affix" style="background-color:Navy;color=White">
 
-<main>
-
-<div class="navbar">
-<div class="row">
-
-  <div class="col-sm-6 dropdown">
-    <button id="deviceListHeader" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Media Device
-    <span class="caret"></span></button>
-    <ul id="deviceList" class="dropdown-menu">
-      <li><a href="#">Please wait.....</a></li>
-    </ul>
-  </div>
-
-  <div class="col-sm-6">
+<div id="nowplaying" style="color:White">Welcome!</div>
+<div>
     <button onclock="clickPlay();" type="button" class="btn btn-default">
       <span class="glyphicon glyphicon-play"></span>
     </button>
@@ -70,17 +43,35 @@ body {margin:0;}
     <button onclick="clickStop();" type="button" class="btn btn-default">
       <span class="glyphicon glyphicon-stop"></span>
     </button>
+    <button onclick="clickBackward();" type="button" class="btn btn-default">
+      <span class="glyphicon glyphicon-fast-backward"></span>
+    </button>
+    <button onclick="clickForward();" type="button" class="btn btn-default">
+      <span class="glyphicon glyphicon-fast-forward"></span>
+    </button>
+</div>
+
+</div>
+
+
+
+
+
+<div class="container-fluid" >
+
+<div class="row">
+  <div class="col-sm-12 dropdown">
+    <button id="deviceListHeader" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Media Device
+    <span class="caret"></span></button>
+    <ul id="deviceList" class="dropdown-menu">
+      <li><a href="#">Please wait.....</a></li>
+    </ul>
   </div>
-
-</div>
 </div>
 
 
 
-
-<div class="main">
-
-<div class="container">
+<div class="container-fluid">
 
   <ul id="tabheaders" class="nav nav-tabs">
     <li class="active"><a data-toggle="tab" href="#tab1">Home</a></li>
@@ -96,20 +87,14 @@ body {margin:0;}
 </div>
 
 <div id="audio-player-container">
-<audio id="audio-player" width="400"/>
+<audio id="audio-player" width="400"
+  playsinline="true"
+  autoplay=""
+/>
 </div>
 
-</div> <!-- main -->
 
-
-
-</main>
-
-
-<footer>
-  <% include ../partials/footer %>
-</footer>
-
+</div> <!-- /container -->
 
 <script>
 
@@ -180,8 +165,12 @@ function clickPlay() {
   }
 }
 
+function clickForward() {
+  playNext();
+}
 
-
+function clickBackward() {
+}
 
 
 function deviceName(d) {
@@ -231,27 +220,78 @@ socket.on('pauseMedia', function(data) {
   }
 });
 
+
+
 socket.on('playMedia', function(data) {
   if (data.player == id) {
     $('#player').html("PLAYER play request received for ME! "+data.action+' - '+data.dataId+' - '+data.text);
-    //var d = $('#audio-player-container');
-    //$(d).html("");
-    //$(d).html('<audio id="audio-player" width="400" controls/>');
-    var x = document.getElementById('audio-player');
-    x.src="";
 
-    //x.load();
-//    x.currentTime = 0;
-    //$('#audio-player').attr("src",'media?id='+data.dataId)
-    x.src = 'media?id='+data.dataId;
-    x.play();
-  } else {
-    $('#player').html("PLAYER play request received for someone else.");
+    queueAudio(data.dataId, data.text);
+
+    //var x = document.getElementById('audio-player');
+    //x.src="";
+
+    //x.src = 'media?id='+data.dataId;
+    //x.play();
+
+    //$('#nowplaying').html("Now playing:"+data.text);
+
   }
-  //alert('play media!');
-  //alert(data);
 });
 
+var audioQueue = [];
+
+// Queue audio for local player
+function queueAudio(mediaId, text) {
+  // Add metadata to queue
+  audioQueue.push( {"mediaId":mediaId, "text":text} );
+  if (!audioPlayer.currentSrc) { playAudioQueue(); }
+}
+
+function notifyStatus() {
+  // Tell everyone what's playing!
+  var p = audioQueue[0].text;
+  if (!p) {
+    p = "Not playing.";
+  } else {
+    p = "Now playing: "+p;
+  }
+  socket.emit("emit", {"action":"mediaStatus", "player":id, "text":p});
+}
+
+
+function playAudioQueue() {
+  audioPlayer.src="";
+  var t=audioQueue[0];
+  if (!t) { return; }
+  audioPlayer.src = 'media?id='+t.mediaId;
+  audioPlayer.play();
+  notifyStatus();
+}
+
+audioPlayer.onended = function() {
+  playNext();
+}
+
+function playNext() {
+  audioQueue.shift(); // remove first element from queue
+  playAudioQueue(); // play the next track in the queue
+}
+
+
+function updateMediaStatus(data) {
+  if (data.player == activeDevice.id) {
+    $('#nowplaying').html(data.text);
+  }
+}
+
+socket.on('emit', function(data) {
+  switch (data.action) {
+    case "mediaStatus":
+      updateMediaStatus(data);
+      break;
+  }
+});
 
 
 function safeText(text) {
